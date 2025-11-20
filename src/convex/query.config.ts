@@ -62,3 +62,31 @@ export const ProjectQuery = async (projectId: string) => {
 
   return { project, profile };
 };
+
+export const StyleGuideQuery = async (projectId: string | null) => {
+  if (!projectId) {
+    return { styleGuide: null };
+  }
+
+  const styleGuide = await preloadQuery(
+    api.projects.getProjectStyleGuide,
+    { projectId: projectId as Id<"projects"> },
+    { token: await convexAuthNextjsToken() }
+  );
+
+  return { styleGuide };
+};
+
+export const MoodBoardImagesQuery = async (projectId: string | null) => {
+  if (!projectId) {
+    return { images: null };
+  }
+
+  const images = await preloadQuery(
+    api.moodboard.getMoodBoardImages,
+    { projectId: projectId as Id<"projects"> },
+    { token: await convexAuthNextjsToken() }
+  );
+
+  return { images };
+};

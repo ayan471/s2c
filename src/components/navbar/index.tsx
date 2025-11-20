@@ -103,8 +103,8 @@ const Navbar = () => {
             <User className="size-5 text-black" />
           </AvatarFallback>
         </Avatar>
+        {!hasCanvas && !hasStyleGuide && <CreateProject />}
       </div>
-      {!hasCanvas && !hasStyleGuide && <CreateProject />}
     </div>
   );
 };
