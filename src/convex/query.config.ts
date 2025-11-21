@@ -1,8 +1,8 @@
-import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
+import { fetchMutation, preloadQuery } from "convex/nextjs";
 import { api } from "../../convex/_generated/api";
-import { preloadQuery } from "convex/nextjs";
-import { ConvexUserRaw, normalizeProfile } from "@/types/user";
+import { convexAuthNextjsToken } from "@convex-dev/auth/nextjs/server";
 import { Id } from "../../convex/_generated/dataModel";
+import { ConvexUserRaw, normalizeProfile } from "@/types/user";
 
 export const ProfileQuery = async () => {
   return await preloadQuery(
@@ -63,6 +63,48 @@ export const ProjectQuery = async (projectId: string) => {
   return { project, profile };
 };
 
+export const ConsumeCreditsQuery = async ({ amount }: { amount?: number }) => {
+  const rawProfile = await ProfileQuery();
+  const profile = normalizeProfile(
+    rawProfile._valueJSON as unknown as ConvexUserRaw | null
+  );
+
+  if (!profile?.id) {
+    return { ok: false, balance: 0, profile: null };
+  }
+
+  const credits = await fetchMutation(
+    api.credits.consumeCredits,
+    {
+      reason: "ai:generation",
+      userId: profile.id as Id<"users">,
+      amount: amount || 1,
+    },
+    { token: await convexAuthNextjsToken() }
+  );
+
+  return { ok: credits.ok, balance: credits.balance, profile };
+};
+
+export const CreditsBalanceQuery = async () => {
+  const rawProfile = await ProfileQuery();
+  const profile = normalizeProfile(
+    rawProfile._valueJSON as unknown as ConvexUserRaw | null
+  );
+
+  if (!profile?.id) {
+    return { ok: false, balance: 0, profile: null };
+  }
+
+  const balance = await preloadQuery(
+    api.credits.getCreditsBalance,
+    { userId: profile.id as Id<"users"> },
+    { token: await convexAuthNextjsToken() }
+  );
+
+  return { ok: true, balance: balance._valueJSON, profile };
+};
+
 export const StyleGuideQuery = async (projectId: string | null) => {
   if (!projectId) {
     return { styleGuide: null };
@@ -84,6 +126,20 @@ export const MoodBoardImagesQuery = async (projectId: string | null) => {
 
   const images = await preloadQuery(
     api.moodboard.getMoodBoardImages,
+    { projectId: projectId as Id<"projects"> },
+    { token: await convexAuthNextjsToken() }
+  );
+
+  return { images };
+};
+
+export const InspirationImagesQuery = async (projectId: string | null) => {
+  if (!projectId) {
+    return { images: null };
+  }
+
+  const images = await preloadQuery(
+    api.inspiration.getInspirationImages,
     { projectId: projectId as Id<"projects"> },
     { token: await convexAuthNextjsToken() }
   );

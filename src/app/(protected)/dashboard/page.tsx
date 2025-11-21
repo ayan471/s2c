@@ -5,11 +5,7 @@ import { combinedSlug } from "@/lib/utils";
 export const dynamic = "force-dynamic";
 
 const Page = async () => {
-  const { entitlement, profileName } = await SubscriptionEntitlementQuery();
-
-  if (!entitlement._valueJSON) {
-    redirect(`/dashboard/${combinedSlug(profileName!)}`);
-  }
+  const { profileName } = await SubscriptionEntitlementQuery();
 
   // Always redirect to dashboard - users can access billing from there if needed
   redirect(`/dashboard/${combinedSlug(profileName!)}`);
